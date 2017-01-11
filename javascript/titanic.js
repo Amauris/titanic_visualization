@@ -63,7 +63,7 @@ function Titanic(data, options) {
           }
         }
 
-        this.barChart_.update(data, keys);
+        //this.barChart_.update(data, keys);
 
       }.bind(this), 10000);
 

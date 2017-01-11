@@ -36,15 +36,6 @@ Chart.prototype.renderBarChart = function(data) {
 Chart.prototype.renderBarItems = function(barItems) {
   var axisScales = this.grid_.getScales();
   var barWidth = this.getBarWidth(axisScales.x);
-  
-
-  var tip = d3.tip()
-                .attr('class', 'd3-tip')
-                .offset([-10, 0])
-                .html(function(d) {
-                  return "<strong>Frequency:</strong> <span style='color:red'>" + d.frequency + "</span>";
-                });
-  barItems.call(tip);
 
  var barTranslationFunction = function(d) {
     var index = d.index;
@@ -65,7 +56,11 @@ Chart.prototype.renderBarItems = function(barItems) {
              return this.getBarHeight(axisScales.y, d.survivalRate);
            }.bind(this));
 
-  barItemsG.append('rect')
+  var div = d3.select('body').append('div') 
+    .attr('class', 'tooltip')       
+    .style('opacity', 0);
+
+  var bars = barItemsG.append('rect')
            .attr('fill', function(d) {
              return d.color;
            })
@@ -75,6 +70,22 @@ Chart.prototype.renderBarItems = function(barItems) {
            .attr('height', function(d) {
              return this.getBarHeight(axisScales.y, d.survivalRate);
            }.bind(this));
+  bars.on('mouseover', function(d) {
+        var barPos = d3.select(this.parentNode).attr('transform').split('(')[1]
+                        .split(')')[0].split(',');
+
+        div.transition()
+            .duration(200)
+            .style('opacity', .9);
+        div .html('HERE<br/>'  + d.close)
+            .style('left', barPos[0] + 'px')
+            .style('top', (parseInt(barPos[1]) + 20) + 'px');
+      })
+      .on('mouseout', function(d) {
+        div.transition()
+          .duration(500)
+          .style('opacity', 0);
+      });
 
   var textTranslationFunction = function(d, i, elementItems) {
     var y = this.getBarHeight(axisScales.y, d.survivalRate) + 20;
