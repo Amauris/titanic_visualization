@@ -1,0 +1,77 @@
+body {
+  font-family: roboto;
+}
+
+h2 {
+  color: black;
+  text-align: center;
+}
+
+.axis {
+  font-family: arial;
+  font-size: 0.6em;
+}
+
+path {
+  fill: none;
+  stroke: black;
+  stroke-width: 2px;
+}
+
+.tick {
+  fill: none;
+  stroke: black;
+}
+
+.tick line{
+  opacity: 0.2;
+}
+
+circle {
+  opacity: 0.4;
+  stroke: none;
+}
+
+.line_plot {
+  fill: none;
+  stroke: #4eb0bb;
+  stroke-width: 1px;
+}
+
+.titanic-play {
+  background: #DDD;
+  display: inline-block;
+  color: #FFF;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 88px;
+  height: 78px;
+}
+
+.titanic-play .on {
+  font-size: 60px;
+  margin: 6px 0px 0px 19px;
+  display: block;
+}
+
+.titanic-play .off {
+  font-size: 46px;
+  margin: 7px 0px 0px 16px;
+  display: block;
+  letter-spacing: -12px;
+}
+
+.titanic-play:hover {
+  box-shadow: 2px 2px 4px grey;
+}
+
+.titanic-filter {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  padding: 10px;
+}
+
+.titanic-filter label {
+  display: block;
+}
