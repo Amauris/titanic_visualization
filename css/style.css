@@ -7,6 +7,19 @@ h2 {
   text-align: center;
 }
 
+.title {
+  font-size: 38px;
+  margin-bottom: 0px;
+}
+
+.description {
+  color: #2980B9;
+  top: 84px;
+  left: 82px;
+  position: absolute;
+  font-size: 28px;
+}
+
 .axis {
   font-family: arial;
   font-size: 0.6em;
@@ -46,6 +59,9 @@ circle {
   cursor: pointer;
   width: 88px;
   height: 78px;
+  position: absolute;
+  top: 190px;
+  right: 100px;
 }
 
 .titanic-play .on {
@@ -65,26 +81,43 @@ circle {
   box-shadow: 2px 2px 4px grey;
 }
 
+.chart {
+  margin-top: 40px;
+}
+
 .titanic-filter {
   position: absolute;
-  top: 0px;
-  right: 0px;
+  top: 284px;
+  right: 60px;
   padding: 10px;
+  background-color: #DDD;
+  border-radius: 4px;
+  width: 108px;
+}
+
+.titanic-filter span {
+  margin-bottom: 4px;
+  display: block;
 }
 
 .titanic-filter label {
   display: block;
+  padding: 6px;
+  margin-left: -6px;
+}
+
+.titanic-filter input {
+  margin-right: 8px;
 }
 
 div.tooltip { 
-    position: absolute;     
-    text-align: center;     
-    width: 60px;          
-    height: 28px;         
-    padding: 2px;       
-    font: 12px sans-serif;    
-    background: lightsteelblue; 
-    border: 0px;    
-    border-radius: 8px;     
-    pointer-events: none;     
+  position: absolute;
+  text-align: center;
+  width: 20px;
+  padding: 10px;
+  text-align: center;
+  background-color: #CCC;
+  font-size: 12px;
+  border: 1px;
+  border-radius: 4px;
 }

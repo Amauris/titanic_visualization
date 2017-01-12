@@ -10,7 +10,7 @@ d3.csv("data.csv", function(d) {
     var chartOptions = {
       title: 'test',
       divId: '#chart-loc',
-      width: 1400,
+      width: 1000,
       height: 600,
       margin: 75,
     };

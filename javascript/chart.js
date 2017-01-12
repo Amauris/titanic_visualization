@@ -77,9 +77,9 @@ Chart.prototype.renderBarItems = function(barItems) {
         div.transition()
             .duration(200)
             .style('opacity', .9);
-        div .html('HERE<br/>'  + d.close)
-            .style('left', barPos[0] + 'px')
-            .style('top', (parseInt(barPos[1]) + 20) + 'px');
+        div.html(d.survivalRate)
+            .style('left', (parseInt(barPos[0]) + (barWidth/2) - 10) + 'px')
+            .style('top', (parseInt(barPos[1]) + 30) + 'px');
       })
       .on('mouseout', function(d) {
         div.transition()
