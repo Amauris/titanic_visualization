@@ -1,111 +1,112 @@
+"""
+  Clean titanic data.
+"""
 import csv
 import json
 
 from os import listdir
 from os.path import isfile, join
 
-RAW_DATA_DIR = './raw_data'
-PROCESSED_DATA_DIR = './data'
-YEAR_TO_ANALYZE = ''
+RAW_FILE = './raw_data/titanic_data.csv'
+PROCESSED_FILE = './data/titanic_data.csv'
+    
+def clean_data(data):
+  header_key_to_index = {}
 
-# Return streamer.
-def convert_file_to_stream(file_loc):
-  all_rows = []
-  
+  for i, row in enumerate(data):
+    if i == 0:
+      header_key_to_index = {k: v for v, k in enumerate(row)}
+    else:
+      map_age_to_bucket(row, header_key_to_index)
+      map_ticket_fare_to_bucket(row, header_key_to_index)
+      map_embarkment(row, header_key_to_index)
+      map_pclass(row, header_key_to_index)
+
+  return data
+
+def map_age_to_bucket(row, header_key_to_index):
   try:
-    csv_file = open(file_loc)
-    return csv.DictReader(csv_file, delimiter=',')
-  except:
-    return None
+    age = int(row[header_key_to_index['Age']])
+    
+    if age < 18:
+      age = '< 18'
+    elif age <= 25:
+      age = '18 - 25'
+    elif age <= 35:
+      age =  '26 - 35'
+    elif age <= 45:
+      age = '36 - 45'
+    elif age <= 55:
+      age = '46 - 55'
+    else:
+      age = '> 55'
 
-def save_data(data):
-  with open(PROCESSED_DATA_DIR + '/processed.json', 'wb') as f:
-    dict_writer = f.write(json.dumps(data))
-    f.close()
+    row[header_key_to_index['Age']] = age
+  except: 
+    row[header_key_to_index['Age']] = None
 
-def get_files():
-  only_files = []
-  for f in listdir(RAW_DATA_DIR):
-    # Ignore hidden files.
-    if isfile(join(RAW_DATA_DIR, f)) and f[0] != '.' and \
-       (not YEAR_TO_ANALYZE or f.find(YEAR_TO_ANALYZE) != -1):
-      only_files.append(join(RAW_DATA_DIR, f))
+def map_ticket_fare_to_bucket(row, header_key_to_index):
+  try:
+    fare = float(row[header_key_to_index['Fare']])
+    nearest_10th = round(fare) - (round(fare)%10)
+    row[header_key_to_index['Fare']] = '{} - {}'\
+                                        .format(int(nearest_10th), 
+                                                int(nearest_10th) + 10)
+  except: 
+    row[header_key_to_index['Fare']] = None
+
+def map_embarkment(row, header_key_to_index):
+  embarkment = row[header_key_to_index['Embarked']]
+
+  if embarkment == 'C':
+    embarkment = 'Cherbourg' 
+  elif embarkment == 'Q':
+    embarkment = 'Queenstown'
+  elif embarkment == 'S':
+    embarkment = 'Southampton'
+  else:
+    embarkment = None
   
-  return only_files
+  row[header_key_to_index['Embarked']] = embarkment
 
-def group_data_by(reader, keys_to_group_by, measures, rollup_func):
+def map_pclass(row, header_key_to_index):
+  pclass = row[header_key_to_index['Pclass']]
 
-  rollup_dict = {}
-  rollup_list = []
+  if pclass == '1':
+    pclass = 'Upper' 
+  elif pclass == '2':
+    pclass = 'Middle'
+  elif pclass == '3':
+    pclass = 'Lower'
+  else:
+    pclass = None
+  
+  row[header_key_to_index['Pclass']] = pclass
 
-  for row in reader:
-    hash = '|'.join([row[key] for key in keys_to_group_by])
-    if hash not in rollup_dict:
-      rollup_dict[hash] = {}
+def save_data(data, loc):
+  with open(loc, 'wb') as csvfile:
+    writer = csv.writer(csvfile, delimiter=',', quotechar='"')
 
-    for measure in measures:
+    for row in data:
+      writer.writerow(row)
 
-      if measure not in rollup_dict[hash]:
-        rollup_dict[hash][measure] = []
+def get_data(loc):
+  data = []
 
-      if is_number(row[measure]):
-        rollup_dict[hash][measure].append(float(row[measure]))
+  with open(loc, 'rb') as csvfile:
+    reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+    data = [row for row in reader]
 
-  for hash, values in rollup_dict.iteritems():
-    temp_rollup = {
-      'rollup_key': hash
-    }
-    for key, value in values.iteritems():
-      temp_rollup[key] = rollup_func(value)
-    rollup_list.append(temp_rollup)
-
-  return rollup_list
-
-def is_number(s):
-    try:
-        float(s)
-        return True
-    except:
-        return False
-
-def mean(list):
-  if len(list) == 0:
-    return None
-  return sum(list)/len(list)
+  return data
 
 def main():
-  data_files = get_files()
-  rollup_data = []
+  data = get_data(RAW_FILE)
+  
+  if len(data) == 0:
+    print 'Error with {}'.format(RAW_FILE)
 
-  measures = [
-    'DepDelay',
-    'ArrDelay',
-    'Distance',
-    'TaxiOut',
-    'Cancelled',
-    'Diverted',
-    'CarrierDelay',
-    'WeatherDelay',
-    'NASDelay',
-    'SecurityDelay',
-    'LateAircraftDelay'
-  ]
-
-  for data_file in data_files:
-    reader = convert_file_to_stream(data_file)
-
-    if reader is None:
-      print 'Error with {}'.format(data_file)
-      continue
-
-    print 'Done Getting stream'
-    rollup_list = group_data_by(reader, ['Year', 'Month', 'UniqueCarrier'], \
-                                measures, mean)
-    rollup_data += rollup_list
-    print len(rollup_list)
-    print 'Done with {}'.format(data_file)
-
-  save_data(rollup_data)
+  data = clean_data(data)
+  save_data(data, PROCESSED_FILE)
 
 
 if __name__ == '__main__':

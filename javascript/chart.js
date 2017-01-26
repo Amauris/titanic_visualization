@@ -7,6 +7,7 @@ function Chart(container, barType, data, options) {
   this.grid_ = null;
   this.options_ = options;
 
+  // Only bar chart is handled at this point.
   switch(barType) {
     case 'bar':
       this.renderBarChart(data);
@@ -18,30 +19,82 @@ function Chart(container, barType, data, options) {
  * Draws a bar chart on top of grid.
  */
 Chart.prototype.renderBarChart = function(data) {
-
   var options = this.options_;
 
   // Eliminate x ticks because x axis is categorical.
   options['xTicks'] = false;
 
   this.grid_ = new Grid(this.container_, options);
-  var barItems = this.container_
-                      .selectAll('rect')
-                      .data(data)
-                      .enter();
 
-  this.renderBarItems(barItems);
-}
+  var barItems = this.createBarItems(data);
 
-Chart.prototype.renderBarItems = function(barItems) {
+  this.styleBarItems(barItems, data.length);
+};
+
+Chart.prototype.createBarItems = function(data) {
+  return this.container_
+              .selectAll('rect')
+              .data(data)
+              .enter();
+};
+
+Chart.prototype.update = function(data) {
+  var keyFunc = function(d) {
+    return d['category'];
+  };
+
+  var bars = this.container_.selectAll('.bar-items')
+                             .data(data, keyFunc);
+
+  bars.exit().remove();
+
+  var barItems = bars.enter();
+  this.styleBarItems(barItems, data.length);
+};
+
+Chart.prototype.update = function(data) {
+  var keyFunc = function(d) {
+    return d['category'];
+  };
+
+  var bars = this.container_.selectAll('.bar-items')
+                             .data(data, keyFunc);
+
+  bars.exit().remove();
+
+  var barItems = bars.enter();
+  this.styleBarItems(barItems, data.length);
+};
+
+Chart.prototype.getBarHeight = function(yScale, value) {
+  return (yScale(100 - 99) - yScale(value));
+};
+
+Chart.prototype.getBarWidth = function(xScale, numOfItems) {
+  if (numOfItems > 9) {
+    return xScale(100/numOfItems);
+  } else {
+    return xScale(16) - xScale(10);
+  }
+};
+
+Chart.prototype.styleBarItems = function(barItems, numOfItems) {
   var axisScales = this.grid_.getScales();
-  var barWidth = this.getBarWidth(axisScales.x);
+  var barWidth = this.getBarWidth(axisScales.x, numOfItems);
 
- var barTranslationFunction = function(d) {
-    var index = d.index;
+  
+  var barItemsG = this.createBarsstyleBar(barItems);
+
+  this.styleTooltip(barItemsG);
+  this.styleText(barItemsG);
+};
+
+Chart.prototype.styleBar = function(barItems) {
+  var barTranslationFunction = function(d, index) {
+    index += 1;
     var x =  axisScales.x(10 * index) + this.options_.x - barWidth/2;
     var y = axisScales.y(1) + this.options_.y - 
-              this.getBarHeight(axisScales.y, d.survivalRate);
+              this.getBarHeight(axisScales.y, d.value);
 
     return  'translate(' + x + ', ' + y + ')';
   }.bind(this);
@@ -53,12 +106,9 @@ Chart.prototype.renderBarItems = function(barItems) {
              return barWidth;
            })
            .attr('height', function(d) {
-             return this.getBarHeight(axisScales.y, d.survivalRate);
+             return this.getBarHeight(axisScales.y, d.value);
            }.bind(this));
-
-  var div = d3.select('body').append('div') 
-    .attr('class', 'tooltip')       
-    .style('opacity', 0);
+           console.log(barItems);
 
   var bars = barItemsG.append('rect')
            .attr('fill', function(d) {
@@ -68,8 +118,20 @@ Chart.prototype.renderBarItems = function(barItems) {
              return barWidth;
            })
            .attr('height', function(d) {
-             return this.getBarHeight(axisScales.y, d.survivalRate);
+             return this.getBarHeight(axisScales.y, d.value);
            }.bind(this));
+
+  return bars;
+}
+
+Chart.prototype.styleTooltip = function(bars) {
+
+  var div = d3.select('body').append('div') 
+    .attr('class', 'tooltip')       
+    .style('opacity', 0);
+
+  
+
   bars.on('mouseover', function(d) {
         var barPos = d3.select(this.parentNode).attr('transform').split('(')[1]
                         .split(')')[0].split(',');
@@ -77,7 +139,7 @@ Chart.prototype.renderBarItems = function(barItems) {
         div.transition()
             .duration(200)
             .style('opacity', .9);
-        div.html(d.survivalRate)
+        div.html(d.value)
             .style('left', (parseInt(barPos[0]) + (barWidth/2) - 10) + 'px')
             .style('top', (parseInt(barPos[1]) + 30) + 'px');
       })
@@ -86,9 +148,11 @@ Chart.prototype.renderBarItems = function(barItems) {
           .duration(500)
           .style('opacity', 0);
       });
+}
 
+Chart.prototype.styleText = function(barItemsG) {
   var textTranslationFunction = function(d, i, elementItems) {
-    var y = this.getBarHeight(axisScales.y, d.survivalRate) + 20;
+    var y = this.getBarHeight(axisScales.y, d.value) + 20;
     var el = elementItems[i];
 
     var centerX = (barWidth/2) - (el.getComputedTextLength()/2);
@@ -97,37 +161,9 @@ Chart.prototype.renderBarItems = function(barItems) {
   }.bind(this);
 
   barItemsG.append('text')
-           .text(function(d){ return d['category']; })
+           .text(function(d){ return d['key']; })
            .attr('fill', function(d) {
              return d.color;
            })
            .attr('transform', textTranslationFunction);
-};
-
-Chart.prototype.update = function(data, keys) {
-  var filteredData = data.filter(function(d) {
-    return keys.indexOf(d['category']) !== -1;
-  });
-
-  console.log(keys, filteredData);
-  var keyFunc = function(d) {
-    return d['category'];
-  };
-
-  var bars = this.container_.selectAll('.bar-items')
-                             .data(filteredData, keyFunc);
-
-  bars.exit().remove();
-
-  var barItems = bars.enter();
-
-  this.renderBarItems(barItems);
-};
-
-Chart.prototype.getBarHeight = function(yScale, value) {
-  return (yScale(100 - 99) - yScale(100 * value));
-};
-
-Chart.prototype.getBarWidth = function(xScale) {
-  return xScale(16) - xScale(10);
-};
+}

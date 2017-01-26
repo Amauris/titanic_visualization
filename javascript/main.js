@@ -2,11 +2,10 @@
   Use D3 (not dimple.js) to load the TSV file
   and pass the contents of it to the draw function
   */
-d3.csv("data.csv", function(d) {
-      d['attendance'] = +d["attendance"];
-      d['date'] = format.parse(d['date']);
+d3.csv("data/titanic_data.csv", function(d) {
       return d;
-  }, function(data){ 
+  }, function(csvData){ 
+
     var chartOptions = {
       title: 'test',
       divId: '#chart-loc',
@@ -48,5 +47,5 @@ d3.csv("data.csv", function(d) {
     ]
 
     //draw(data);
-    new Titanic(data, chartOptions);
+    new Titanic(csvData, chartOptions);
   });
